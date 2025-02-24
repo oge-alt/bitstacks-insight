@@ -139,3 +139,50 @@
         (<= (len desc) u256)  ;; Maximum description length
     )
 )
+
+;; Validates lock period duration
+(define-private (is-valid-lock-period (lock-period uint))
+    (or 
+        (is-eq lock-period u0)     ;; No lock
+        (is-eq lock-period u4320)  ;; 1 month
+        (is-eq lock-period u8640)  ;; 2 months
+    )
+)
+
+;; Validates voting period duration
+(define-private (is-valid-voting-period (period uint))
+    (and 
+        (>= period u100)   ;; Minimum voting blocks
+        (<= period u2880)  ;; Maximum voting blocks (approximately 1 day)
+    )
+)
+
+;; Public Functions
+
+;; Initializes protocol configuration and tier levels
+(define-public (initialize-contract)
+    (begin
+        (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+        
+        ;; Set up tier levels
+        (map-set TierLevels u1 
+            {
+                minimum-stake: u1000000,  ;; 1M uSTX
+                reward-multiplier: u100,  ;; 1x
+                features-enabled: (list true false false false false false false false false false)
+            })
+        (map-set TierLevels u2
+            {
+                minimum-stake: u5000000,  ;; 5M uSTX
+                reward-multiplier: u150,  ;; 1.5x
+                features-enabled: (list true true true false false false false false false false)
+            })
+        (map-set TierLevels u3
+            {
+                minimum-stake: u10000000, ;; 10M uSTX
+                reward-multiplier: u200,  ;; 2x
+                features-enabled: (list true true true true true false false false false false)
+            })
+        (ok true)
+    )
+)
